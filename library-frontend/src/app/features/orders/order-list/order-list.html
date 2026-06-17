@@ -1,0 +1,57 @@
+<div class="dashboard-container">
+  <header class="dashboard-header">
+    <div class="logo-section">
+      <h2>📚 {{ 'APP.TITLE' | translate }}</h2>
+    </div>
+    <div class="nav-links">
+      <button routerLink="/search" class="nav-btn">📖 {{ 'NAV.SEARCH' | translate }}</button>
+      <button routerLink="/orders" class="nav-btn active">🛒 {{ 'NAV.MY_ORDERS' | translate }}</button>
+      <app-lang-switcher></app-lang-switcher>
+    </div>
+    <div class="user-section">
+      <button (click)="onLogout()" class="logout-btn">{{ 'APP.LOGOUT' | translate }}</button>
+    </div>
+  </header>
+
+  <main class="dashboard-content">
+    <div class="content-header">
+      <h3>{{ 'ORDERS.HISTORY_TITLE' | translate }}</h3>
+    </div>
+
+    <div *ngIf="errorMessage" class="error-banner">
+      {{ errorMessage | translate }}
+    </div>
+
+    <div *ngIf="orders.length === 0 && !errorMessage" class="empty-state">
+      <p>{{ 'ORDERS.NO_ORDERS_YET' | translate }}</p>
+      <button routerLink="/search" class="go-shop-btn">{{ 'ORDERS.GO_TO_BOOKS' | translate }}</button>
+    </div>
+
+    <div class="table-responsive" *ngIf="orders.length > 0">
+      <table class="books-table">
+        <thead>
+        <tr>
+          <th>{{ 'ORDERS.COL_ID' | translate }}</th>
+          <th>{{ 'ORDERS.COL_BOOK' | translate }}</th>
+          <th>{{ 'ORDERS.COL_AUTHOR' | translate }}</th>
+          <th>{{ 'ORDERS.COL_QTY' | translate }}</th>
+          <th>{{ 'ORDERS.COL_STATUS' | translate }}</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr *ngFor="let order of orders">
+          <td>#{{ order.id }}</td>
+          <td class="book-title">{{ getBookInfo(order.bookId, 'title') }}</td>
+          <td>{{ getBookInfo(order.bookId, 'author') }}</td>
+          <td><strong>{{ order.quantity }}</strong></td>
+          <td>
+            <span class="status-badge" [ngClass]="getStatusClass(order.status)">
+              {{ order.status || 'PENDING' }}
+            </span>
+          </td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+</div>

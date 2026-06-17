@@ -1,0 +1,137 @@
+<div class="dashboard-container">
+  <header class="dashboard-header">
+    <div class="logo-section">
+      <h2>📚 {{ 'APP.TITLE' | translate }}</h2>
+    </div>
+    <div class="nav-links">
+      <button routerLink="/books" class="nav-btn active">📖 {{ 'NAV.SEARCH' | translate }}</button>
+      <button *ngIf="!isLibrarian()" routerLink="/orders" class="nav-btn">🛒 {{ 'NAV.MY_ORDERS' | translate }}</button>
+      <button *ngIf="isLibrarian()" routerLink="/librarian" class="nav-btn">📋 {{ 'NAV.DASHBOARD' | translate }}</button>
+      <app-lang-switcher></app-lang-switcher>
+    </div>
+    <div class="user-section">
+      <button (click)="onLogout()" class="logout-btn">{{ 'APP.LOGOUT' | translate }}</button>
+    </div>
+  </header>
+
+  <main class="dashboard-content">
+    <div class="content-header">
+      <h3>{{ 'SEARCH.TITLE' | translate }}</h3>
+      <button *ngIf="isLibrarian()" class="add-book-btn" (click)="openModal()">➕ {{ 'BOOKS.ADD' | translate }}</button>
+    </div>
+
+    <div *ngIf="errorMessage" class="error-banner">
+      {{ errorMessage | translate }}
+    </div>
+
+    <div *ngIf="books.length === 0 && !errorMessage" class="empty-state">
+      <p>{{ 'BOOKS.NONE_IN_LIBRARY' | translate }}</p>
+    </div>
+
+    <div class="table-responsive" *ngIf="books.length > 0">
+      <table class="books-table">
+        <thead>
+        <tr>
+          <th>{{ 'BOOKS.COL_NO' | translate }}</th>
+          <th>{{ 'BOOKS.COL_TITLE' | translate }}</th>
+          <th>{{ 'BOOKS.COL_AUTHOR' | translate }}</th>
+          <th>{{ 'BOOKS.COL_PRICE' | translate }}</th>
+          <th>{{ 'BOOKS.COL_QTY' | translate }}</th>
+          <th style="text-align: center">{{ 'BOOKS.COL_ACTIONS' | translate }}</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr *ngFor="let book of books; let i = index">
+          <td>{{ i + 1 }}</td>
+          <td class="book-title">{{ book.title }}</td>
+          <td>{{ book.author }}</td>
+          <td><span class="price-badge">${{ book.price }}</span></td>
+          <td>{{ book.quantity }}</td>
+          <td class="actions-cell">
+            <div class="action-buttons">
+              <button *ngIf="!isLibrarian()" class="order-action-btn" (click)="openOrderModal(book)">{{ 'BOOKS.ORDER' | translate }}</button>
+              <button *ngIf="isLibrarian()" class="edit-btn" (click)="openEditModal(book)">{{ 'BOOKS.EDIT' | translate }}</button>
+              <button *ngIf="isLibrarian()" class="delete-btn" (click)="openDeleteModal(book.id)">{{ 'BOOKS.DELETE' | translate }}</button>
+            </div>
+          </td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+
+  <div class="modal-overlay" *ngIf="isModalOpen">
+    <div class="modal-box">
+      <h3>{{ isEditMode ? ('BOOKS.MODAL_EDIT_TITLE' | translate) : ('BOOKS.MODAL_ADD_TITLE' | translate) }}</h3>
+
+      <div *ngIf="modalErrorMessage" class="modal-error">
+        ⚠️ {{ modalErrorMessage | translate }}
+      </div>
+
+      <div class="form-group">
+        <label>{{ 'BOOKS.FIELD_TITLE' | translate }}</label>
+        <input type="text" [(ngModel)]="newBook.title" placeholder="Effective Java" />
+        <div *ngIf="bookFieldErrors['title']" class="field-error">⚠ {{ bookFieldErrors['title'] }}</div>
+      </div>
+
+      <div class="form-group">
+        <label>{{ 'BOOKS.FIELD_AUTHOR' | translate }}</label>
+        <input type="text" [(ngModel)]="newBook.author" placeholder="Joshua Bloch" />
+        <div *ngIf="bookFieldErrors['author']" class="field-error">⚠ {{ bookFieldErrors['author'] }}</div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>{{ 'BOOKS.FIELD_PRICE' | translate }}</label>
+          <input type="number" [(ngModel)]="newBook.price" min="0" />
+          <div *ngIf="bookFieldErrors['price']" class="field-error">⚠ {{ bookFieldErrors['price'] }}</div>
+        </div>
+        <div class="form-group">
+          <label>{{ 'BOOKS.FIELD_QTY' | translate }}</label>
+          <input type="number" [(ngModel)]="newBook.quantity" min="0" />
+          <div *ngIf="bookFieldErrors['quantity']" class="field-error">⚠ {{ bookFieldErrors['quantity'] }}</div>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="cancel-btn" (click)="closeModal()">{{ 'BOOKS.CANCEL' | translate }}</button>
+        <button class="save-btn" (click)="saveBook()">{{ isEditMode ? ('BOOKS.UPDATE' | translate) : ('BOOKS.SAVE' | translate) }}</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" *ngIf="isDeleteModalOpen">
+    <div class="modal-box delete-modal-box">
+      <h3>🗑️ {{ 'BOOKS.DELETE_CONFIRM_TITLE' | translate }}</h3>
+      <p>{{ 'BOOKS.DELETE_CONFIRM_MSG' | translate }}</p>
+
+      <div class="modal-actions">
+        <button class="cancel-btn" (click)="closeDeleteModal()">{{ 'BOOKS.CANCEL' | translate }}</button>
+        <button class="danger-btn" (click)="confirmDelete()">{{ 'BOOKS.DELETE' | translate }}</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" *ngIf="isOrderModalOpen">
+    <div class="modal-box">
+      <h3>🛒 {{ 'ORDERS.MODAL_TITLE' | translate }}</h3>
+      <p style="color: #5f6368; margin-bottom: 15px;">
+        {{ 'ORDERS.MODAL_BOOK' | translate }} <strong>{{ selectedBook?.title }}</strong>
+      </p>
+
+      <div *ngIf="orderModalErrorMessage" class="modal-error">
+        ⚠️ {{ orderModalErrorMessage | translate }}
+      </div>
+
+      <div class="form-group">
+        <label>{{ 'ORDERS.MODAL_QTY_LABEL' | translate: {qty: selectedBook?.quantity} }}</label>
+        <input type="number" [(ngModel)]="orderQuantity" min="1" [max]="selectedBook?.quantity" />
+      </div>
+
+      <div class="modal-actions">
+        <button class="cancel-btn" (click)="closeOrderModal()">{{ 'ORDERS.MODAL_CANCEL' | translate }}</button>
+        <button class="save-btn" style="background-color: #34a853;" (click)="confirmOrder()">{{ 'ORDERS.MODAL_CONFIRM' | translate }}</button>
+      </div>
+    </div>
+  </div>
+</div>

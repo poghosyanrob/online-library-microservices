@@ -1,0 +1,63 @@
+<div class="login-container">
+  <div class="login-card">
+
+    <div class="auth-logo">
+      <span class="auth-logo-icon">📚</span>
+      <span class="auth-logo-name">{{ 'APP.TITLE' | translate }}</span>
+    </div>
+
+    <h2>{{ 'AUTH.LOGIN.TITLE' | translate }}</h2>
+    <p class="auth-subtitle">{{ 'AUTH.LOGIN.SUBTITLE' | translate }}</p>
+
+    <form (ngSubmit)="onLogin()">
+      <div class="form-group">
+        <label for="email">{{ 'AUTH.LOGIN.EMAIL' | translate }}</label>
+        <div class="input-wrapper">
+          <span class="input-icon">✉</span>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            [(ngModel)]="loginData.email"
+            placeholder="you@example.com"
+            (blur)="onBlur('email')"
+            (input)="onInput('email')"
+            required>
+        </div>
+        <div *ngIf="fieldErrors['email']" class="field-error">⚠ {{ fieldErrors['email'] | translate }}</div>
+      </div>
+
+      <div class="form-group">
+        <label for="password">{{ 'AUTH.LOGIN.PASSWORD' | translate }}</label>
+        <div class="input-wrapper">
+          <span class="input-icon">🔒</span>
+          <input
+            type="password"
+            id="password"
+            name="password"
+            [(ngModel)]="loginData.password"
+            placeholder="••••••••"
+            (blur)="onBlur('password')"
+            (input)="onInput('password')"
+            required>
+        </div>
+        <div *ngIf="fieldErrors['password']" class="field-error">⚠ {{ fieldErrors['password'] | translate }}</div>
+      </div>
+
+      <button type="submit" class="login-btn">{{ 'AUTH.LOGIN.SUBMIT' | translate }}</button>
+    </form>
+
+    <div *ngIf="errorMessage" class="error-msg" [class.error-shake]="errorShake">
+      ⚠ {{ errorMessage | translate }}
+    </div>
+
+    <div class="auth-footer">
+      {{ 'AUTH.LOGIN.NO_ACCOUNT' | translate }} <a routerLink="/register">{{ 'AUTH.LOGIN.REGISTER_LINK' | translate }}</a>
+    </div>
+
+    <div class="lang-switcher-wrap" style="margin-top:16px; display:flex; justify-content:center;">
+      <app-lang-switcher></app-lang-switcher>
+    </div>
+
+  </div>
+</div>

@@ -1,0 +1,35 @@
+# Secrets
+.env
+
+# Java build output
+target/
+*.class
+*.jar
+*.war
+
+# Maven wrapper jar
+.mvn/wrapper/maven-wrapper.jar
+
+# Logs
+logs/
+
+# Uploaded files
+uploads/
+
+# Node / Angular
+node_modules/
+dist/
+library-frontend/.angular/
+
+# IDE
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+
+# macOS
+.DS_Store
+
+# Claude Code session data
+.claude/

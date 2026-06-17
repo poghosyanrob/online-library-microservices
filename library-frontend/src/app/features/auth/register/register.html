@@ -1,0 +1,55 @@
+<div class="register-container">
+  <div class="register-card">
+
+    <div class="auth-logo">
+      <span class="auth-logo-icon">📚</span>
+      <span class="auth-logo-name">{{ 'APP.TITLE' | translate }}</span>
+    </div>
+
+    <h2>{{ 'AUTH.REGISTER.TITLE' | translate }}</h2>
+    <p class="auth-subtitle">{{ 'AUTH.REGISTER.SUBTITLE' | translate }}</p>
+
+    <form (ngSubmit)="onRegister()">
+      <div class="form-group">
+        <label>{{ 'AUTH.REGISTER.USERNAME' | translate }}</label>
+        <div class="input-wrapper">
+          <span class="input-icon">👤</span>
+          <input type="text" name="username" [(ngModel)]="registerData.username" [placeholder]="'AUTH.REGISTER.NAME_PLACEHOLDER' | translate" required>
+        </div>
+        <div *ngIf="fieldErrors['username']" class="field-error">⚠ {{ fieldErrors['username'] }}</div>
+      </div>
+
+      <div class="form-group">
+        <label>{{ 'AUTH.REGISTER.EMAIL' | translate }}</label>
+        <div class="input-wrapper">
+          <span class="input-icon">✉</span>
+          <input type="email" name="email" [(ngModel)]="registerData.email" placeholder="you@example.com" required>
+        </div>
+        <div *ngIf="fieldErrors['email']" class="field-error">⚠ {{ fieldErrors['email'] }}</div>
+      </div>
+
+      <div class="form-group">
+        <label>{{ 'AUTH.REGISTER.PASSWORD' | translate }}</label>
+        <div class="input-wrapper">
+          <span class="input-icon">🔒</span>
+          <input type="password" name="password" [(ngModel)]="registerData.password" placeholder="••••••••" required>
+        </div>
+        <div *ngIf="fieldErrors['password']" class="field-error">⚠ {{ fieldErrors['password'] }}</div>
+      </div>
+
+      <button type="submit" class="register-btn">{{ 'AUTH.REGISTER.SUBMIT' | translate }}</button>
+    </form>
+
+    <div *ngIf="successMessage" class="success-msg">✓ {{ successMessage | translate }}</div>
+    <div *ngIf="errorMessage" class="error-msg">⚠ {{ errorMessage | translate }}</div>
+
+    <div class="link">
+      {{ 'AUTH.REGISTER.HAS_ACCOUNT' | translate }} <a routerLink="/login">{{ 'AUTH.REGISTER.LOGIN_LINK' | translate }}</a>
+    </div>
+
+    <div class="lang-switcher-wrap" style="margin-top:16px; display:flex; justify-content:center;">
+      <app-lang-switcher></app-lang-switcher>
+    </div>
+
+  </div>
+</div>

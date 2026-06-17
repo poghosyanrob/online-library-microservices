@@ -1,0 +1,209 @@
+<div class="dashboard-container">
+
+  <header class="dashboard-header">
+    <div class="logo-section">
+      <h2>📚 {{ 'APP.TITLE' | translate }}</h2>
+    </div>
+    <div class="nav-links">
+      <span class="nav-badge">⚙️ {{ 'ADMIN.PANEL_BADGE' | translate }}</span>
+      <app-lang-switcher></app-lang-switcher>
+    </div>
+    <div class="user-section">
+      <button (click)="onLogout()" class="logout-btn">{{ 'APP.LOGOUT' | translate }}</button>
+    </div>
+  </header>
+
+  <div class="dashboard-content">
+
+    <div *ngIf="loading" class="loading-state">
+      <div class="loading-spinner"></div>
+      <p>{{ 'APP.LOADING' | translate }}</p>
+    </div>
+
+    <ng-container *ngIf="!loading">
+
+      <div class="content-header">
+        <h3>{{ 'ADMIN.DASHBOARD_TITLE' | translate }}</h3>
+      </div>
+
+      <div class="stats-row" *ngIf="stats">
+        <div class="stat-card-dark">
+          <div class="stat-icon-wrap indigo-icon">📚</div>
+          <div class="stat-info">
+            <p class="stat-val">{{ stats.totalBookTitles }}</p>
+            <p class="stat-lbl">{{ 'ADMIN.STAT_TITLES' | translate }}</p>
+          </div>
+        </div>
+        <div class="stat-card-dark">
+          <div class="stat-icon-wrap violet-icon">📦</div>
+          <div class="stat-info">
+            <p class="stat-val">{{ stats.totalBookQuantity }}</p>
+            <p class="stat-lbl">{{ 'ADMIN.STAT_TOTAL_BOOKS' | translate }}</p>
+          </div>
+        </div>
+        <div class="stat-card-dark">
+          <div class="stat-icon-wrap cyan-icon">🛒</div>
+          <div class="stat-info">
+            <p class="stat-val">{{ stats.totalOrders }}</p>
+            <p class="stat-lbl">{{ 'ADMIN.STAT_ORDERS' | translate }}</p>
+          </div>
+        </div>
+        <div class="stat-card-dark">
+          <div class="stat-icon-wrap success-icon">💰</div>
+          <div class="stat-info">
+            <p class="stat-val">{{ stats.totalRevenue | currency:'USD':'symbol':'1.0-0' }}</p>
+            <p class="stat-lbl">{{ 'ADMIN.STAT_REVENUE' | translate }}</p>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="errorMessage" class="error-banner" style="margin-bottom:24px">⚠️ {{ errorMessage | translate }}</div>
+
+      <div class="glass-panel" style="margin-bottom: 24px;">
+        <div class="panel-header-row">
+          <h4 class="panel-title" style="margin-bottom:0; border-bottom:none; padding-bottom:0;">
+            📚 {{ 'ADMIN.STAT_TITLES' | translate }}
+          </h4>
+          <button class="add-book-btn" (click)="toggleBooks()">
+            {{ showBooks ? ('ADMIN.HIDE_BOOKS' | translate) : ('ADMIN.VIEW_BOOKS' | translate) }}
+          </button>
+        </div>
+        <div *ngIf="showBooks" style="margin-top: 16px;">
+          <div *ngIf="books.length === 0" class="empty-state">
+            <p>{{ 'BOOKS.NONE_IN_LIBRARY' | translate }}</p>
+          </div>
+          <div class="book-cards-grid" *ngIf="books.length > 0">
+            <div class="book-card" *ngFor="let book of books">
+              <div class="book-card-image">
+                <img *ngIf="getImageUrl(book)" [src]="getImageUrl(book)" [alt]="book.title" />
+                <div *ngIf="!getImageUrl(book)" class="book-card-placeholder">📖</div>
+              </div>
+              <div class="book-card-body">
+                <h4 class="book-card-title">{{ book.title }}</h4>
+                <p class="book-card-author">{{ book.author }}</p>
+                <div class="book-card-footer">
+                  <span class="book-card-price">${{ book.price }}</span>
+                  <span class="book-card-qty-badge">{{ book.quantity }} {{ 'BOOKS.COL_QTY' | translate }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="glass-panel" style="margin-bottom: 24px;">
+        <div class="panel-header-row">
+          <h4 class="panel-title" style="margin-bottom:0; border-bottom:none; padding-bottom:0;">
+            🧑‍💼 {{ 'ADMIN.LIBRARIANS_TITLE' | translate }}
+          </h4>
+          <button class="add-book-btn" (click)="openLibrarianModal()">
+            ➕ {{ 'ADMIN.ADD_LIBRARIAN_TITLE' | translate }}
+          </button>
+        </div>
+        <div style="height:1px; background: var(--border-2); margin: 16px 0 20px;"></div>
+        <div class="table-responsive">
+          <table class="books-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>{{ 'ADMIN.FORM_USERNAME' | translate }}</th>
+                <th>{{ 'ADMIN.FORM_EMAIL' | translate }}</th>
+                <th>{{ 'ORDERS.COL_STATUS' | translate }}</th>
+                <th style="text-align:center">{{ 'ADMIN.COL_MANAGEMENT' | translate }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let lib of librarians; let i = index">
+                <td>{{ i + 1 }}</td>
+                <td class="book-title">{{ lib.username }}</td>
+                <td>{{ lib.email }}</td>
+                <td>
+                  <span class="status-badge"
+                        [ngClass]="lib.active ? 'status-completed' : 'status-canceled'">
+                    {{ lib.active ? ('ADMIN.STATUS_ACTIVE' | translate) : ('ADMIN.STATUS_INACTIVE' | translate) }}
+                  </span>
+                </td>
+                <td style="text-align:center">
+                  <button (click)="onToggleLibrarian(lib)"
+                          class="toggle-btn"
+                          [ngClass]="lib.active ? 'toggle-deactivate' : 'toggle-activate'">
+                    {{ lib.active ? ('ADMIN.DEACTIVATE' | translate) : ('ADMIN.ACTIVATE' | translate) }}
+                  </button>
+                </td>
+              </tr>
+              <tr *ngIf="librarians.length === 0">
+                <td colspan="5" class="empty-row">{{ 'ADMIN.LIBRARIANS_NONE' | translate }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="glass-panel">
+        <h4 class="panel-title">👥 {{ 'ADMIN.USERS_TITLE' | translate }}</h4>
+        <div class="table-responsive">
+          <table class="books-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>{{ 'ADMIN.FORM_USERNAME' | translate }}</th>
+                <th>{{ 'ADMIN.FORM_EMAIL' | translate }}</th>
+                <th>{{ 'ORDERS.COL_STATUS' | translate }}</th>
+                <th style="text-align:center">{{ 'ADMIN.COL_MANAGEMENT' | translate }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let user of users; let i = index">
+                <td>{{ i + 1 }}</td>
+                <td class="book-title">{{ user.username }}</td>
+                <td>{{ user.email }}</td>
+                <td>
+                  <span class="status-badge"
+                        [ngClass]="user.active ? 'status-completed' : 'status-canceled'">
+                    {{ user.active ? ('ADMIN.STATUS_ACTIVE' | translate) : ('ADMIN.STATUS_INACTIVE' | translate) }}
+                  </span>
+                </td>
+                <td style="text-align:center">
+                  <button (click)="onToggleUser(user)"
+                          class="toggle-btn"
+                          [ngClass]="user.active ? 'toggle-deactivate' : 'toggle-activate'">
+                    {{ user.active ? ('ADMIN.DEACTIVATE' | translate) : ('ADMIN.ACTIVATE' | translate) }}
+                  </button>
+                </td>
+              </tr>
+              <tr *ngIf="users.length === 0">
+                <td colspan="5" class="empty-row">{{ 'ADMIN.USERS_NONE' | translate }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </ng-container>
+
+  </div>
+
+  <div class="modal-overlay" *ngIf="isLibrarianModalOpen">
+    <div class="modal-box">
+      <h3>🧑‍💼 {{ 'ADMIN.ADD_LIBRARIAN_TITLE' | translate }}</h3>
+      <div *ngIf="librarianModalError" class="modal-error">⚠️ {{ librarianModalError | translate }}</div>
+      <div class="form-group">
+        <label>{{ 'ADMIN.FORM_USERNAME' | translate }}</label>
+        <input type="text" [(ngModel)]="newLibrarian.username" placeholder="librarian2" />
+      </div>
+      <div class="form-group">
+        <label>{{ 'ADMIN.FORM_EMAIL' | translate }}</label>
+        <input type="email" [(ngModel)]="newLibrarian.email" placeholder="email@library.am" />
+      </div>
+      <div class="form-group">
+        <label>{{ 'ADMIN.FORM_PASSWORD' | translate }}</label>
+        <input type="password" [(ngModel)]="newLibrarian.password" placeholder="••••••••" />
+      </div>
+      <div class="modal-actions">
+        <button class="cancel-btn" (click)="closeLibrarianModal()">{{ 'ORDERS.MODAL_CANCEL' | translate }}</button>
+        <button class="save-btn" (click)="onAddLibrarian()">{{ 'ADMIN.FORM_ADD_BTN' | translate }}</button>
+      </div>
+    </div>
+  </div>
+
+</div>

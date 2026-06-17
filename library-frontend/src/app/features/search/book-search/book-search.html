@@ -1,0 +1,87 @@
+<div class="dashboard-container">
+  <header class="dashboard-header">
+    <div class="logo-section">
+      <h2>📚 {{ 'APP.TITLE' | translate }}</h2>
+    </div>
+    <div class="nav-links">
+      <span class="nav-badge">🔍 {{ 'SEARCH.TITLE' | translate }}</span>
+      <button routerLink="/orders" class="nav-btn">🛒 {{ 'NAV.MY_ORDERS' | translate }}</button>
+      <app-lang-switcher></app-lang-switcher>
+    </div>
+    <div class="user-section">
+      <button (click)="onLogout()" class="logout-btn">{{ 'APP.LOGOUT' | translate }}</button>
+    </div>
+  </header>
+
+  <main class="dashboard-content">
+
+    <div *ngIf="loading" class="loading-state">
+      <div class="loading-spinner"></div>
+      <p>{{ 'APP.LOADING' | translate }}</p>
+    </div>
+
+    <ng-container *ngIf="!loading">
+      <div class="content-header">
+        <h3>{{ 'SEARCH.TITLE' | translate }}</h3>
+      </div>
+
+      <div class="search-bar-wrap">
+        <input
+          type="text"
+          class="search-input"
+          [(ngModel)]="searchQuery"
+          (input)="onSearchInput()"
+          [placeholder]="'🔍 ' + ('SEARCH.PLACEHOLDER' | translate)"
+        />
+      </div>
+
+      <div *ngIf="errorMessage" class="error-banner">{{ errorMessage | translate }}</div>
+
+      <div *ngIf="books.length === 0 && !errorMessage" class="empty-state">
+        <p>{{ 'SEARCH.NO_RESULTS' | translate }}</p>
+      </div>
+
+      <div class="book-cards-grid" *ngIf="books.length > 0">
+        <div class="book-card" *ngFor="let book of books">
+          <div class="book-card-image">
+            <img *ngIf="getImageUrl(book)" [src]="getImageUrl(book)" [alt]="book.title" />
+            <div *ngIf="!getImageUrl(book)" class="book-card-placeholder">📖</div>
+          </div>
+          <div class="book-card-body">
+            <h4 class="book-card-title">{{ book.title }}</h4>
+            <p class="book-card-author">{{ book.author }}</p>
+            <p class="book-card-qty">{{ 'BOOKS.COL_AVAILABLE' | translate }}: {{ book.quantity }}</p>
+            <div class="book-card-footer">
+              <span class="book-card-price">${{ book.price }}</span>
+              <button
+                class="book-card-order-btn"
+                [class.out-of-stock]="book.quantity === 0"
+                [disabled]="book.quantity === 0"
+                (click)="openOrderModal(book)">
+                {{ book.quantity === 0 ? ('BOOKS.OUT_OF_STOCK' | translate) : ('🛒 ' + ('BOOKS.ORDER' | translate)) }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+  </main>
+
+  <div class="modal-overlay" *ngIf="isOrderModalOpen">
+    <div class="modal-box">
+      <h3>🛒 {{ 'ORDERS.MODAL_TITLE' | translate }}</h3>
+      <p style="color: var(--t2); margin-bottom: 15px;">
+        {{ 'ORDERS.MODAL_BOOK' | translate }} <strong style="color:var(--t1)">{{ selectedBook?.title }}</strong>
+      </p>
+      <div *ngIf="orderModalErrorMessage" class="modal-error">⚠️ {{ orderModalErrorMessage | translate }}</div>
+      <div class="form-group">
+        <label>{{ 'ORDERS.MODAL_QTY_LABEL' | translate: {qty: selectedBook?.quantity} }}</label>
+        <input type="number" [(ngModel)]="orderQuantity" min="1" [max]="selectedBook?.quantity" />
+      </div>
+      <div class="modal-actions">
+        <button class="cancel-btn" (click)="closeOrderModal()">{{ 'ORDERS.MODAL_CANCEL' | translate }}</button>
+        <button class="save-btn" style="background-color:#10b981" (click)="confirmOrder()">{{ 'ORDERS.MODAL_CONFIRM' | translate }}</button>
+      </div>
+    </div>
+  </div>
+</div>
