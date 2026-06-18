@@ -59,16 +59,14 @@ services:
 
   user-service:
     build: ./user-service
-    image: online-library-microservices-user-service:latest
     container_name: user_service
     restart: always
+    env_file:
+      - .env
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/user_db
       - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:29092
       - REDIS_HOST=redis
-      - DB_PASSWORD=${DB_PASSWORD}
-      - JWT_SECRET=${JWT_SECRET}
-      - GATEWAY_SECRET=${GATEWAY_SECRET}
     depends_on:
       postgres:
         condition: service_healthy
@@ -79,18 +77,17 @@ services:
 
   book-service:
     build: ./book-service
-    image: online-library-microservices-book-service:latest
     container_name: book_service
     restart: always
+    env_file:
+      - .env
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/book_db
       - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:29092
       - REDIS_HOST=redis
-      - DB_PASSWORD=${DB_PASSWORD}
-      - GATEWAY_SECRET=${GATEWAY_SECRET}
-      - UPLOAD_DIR=/app/uploads/books
+      - UPLOAD_DIR=/uploads/books
     volumes:
-      - book_uploads:/app/uploads/books
+      - ./uploads:/uploads
     depends_on:
       postgres:
         condition: service_healthy
@@ -101,16 +98,15 @@ services:
 
   order-service:
     build: ./order-service
-    image: online-library-microservices-order-service:latest
     container_name: order_service
     restart: always
+    env_file:
+      - .env
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/order_db
       - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:29092
       - REDIS_HOST=redis
       - BOOK_SERVICE_URL=http://book-service:8081
-      - DB_PASSWORD=${DB_PASSWORD}
-      - GATEWAY_SECRET=${GATEWAY_SECRET}
     depends_on:
       postgres:
         condition: service_healthy
@@ -121,18 +117,17 @@ services:
 
   gateway-service:
     build: ./gateway-service
-    image: online-library-microservices-gateway-service:latest
     container_name: gateway_service
     restart: always
     ports:
       - "8080:8080"
+    env_file:
+      - .env
     environment:
       - REDIS_HOST=redis
       - USER_SERVICE_URL=http://user-service:8083
       - BOOK_SERVICE_URL=http://book-service:8081
       - ORDER_SERVICE_URL=http://order-service:8082
-      - JWT_SECRET=${JWT_SECRET}
-      - GATEWAY_SECRET=${GATEWAY_SECRET}
     depends_on:
       redis:
         condition: service_healthy
@@ -145,4 +140,3 @@ services:
 
 volumes:
   postgres_data:
-  book_uploads:

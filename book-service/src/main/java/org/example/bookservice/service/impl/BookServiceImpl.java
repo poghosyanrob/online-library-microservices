@@ -4,7 +4,6 @@ import jakarta.annotation.PostConstruct;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.example.bookservice.event.BookInventoryEvent;
 import org.example.bookservice.mapper.BookMapper;
 import org.example.bookservice.model.Book;
 import org.example.bookservice.model.dto.BookDto;
@@ -18,7 +17,6 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
-import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -36,7 +34,6 @@ import java.util.UUID;
 public class BookServiceImpl implements BookService {
     private final BookRepository bookRepository;
     private final BookMapper bookMapper;
-    private final KafkaTemplate<Object, Object> kafkaTemplate;
     private final MessageSource messageSource;
 
     @Value("${app.upload.dir:uploads/books}")
@@ -92,15 +89,7 @@ public class BookServiceImpl implements BookService {
     public BookDto createBook(BookRequest request) {
         Book book = bookMapper.toEntity(request);
         Book savedBook = bookRepository.save(book);
-        BookDto dto = bookMapper.toDto(savedBook);
-
-        BookInventoryEvent event = new BookInventoryEvent(
-                savedBook.getId(), savedBook.getTitle(), savedBook.getAuthor(),
-                savedBook.getPrice(), savedBook.getQuantity(), "CREATE"
-        );
-        kafkaTemplate.send("book-inventory-topic", String.valueOf(savedBook.getId()), event);
-
-        return dto;
+        return bookMapper.toDto(savedBook);
     }
 
     @Override
@@ -113,19 +102,7 @@ public class BookServiceImpl implements BookService {
         Book existingBook = getBookEntityById(id);
         bookMapper.updateEntityFromRequest(request, existingBook);
         Book updatedBook = bookRepository.save(existingBook);
-        BookDto dto = bookMapper.toDto(updatedBook);
-
-        BookInventoryEvent event = new BookInventoryEvent(
-                updatedBook.getId(),
-                updatedBook.getTitle(),
-                updatedBook.getAuthor(),
-                updatedBook.getPrice(),
-                updatedBook.getQuantity(),
-                "UPDATE"
-        );
-        kafkaTemplate.send("book-inventory-topic", String.valueOf(updatedBook.getId()), event);
-
-        return dto;
+        return bookMapper.toDto(updatedBook);
     }
 
     @Override
@@ -136,16 +113,6 @@ public class BookServiceImpl implements BookService {
     @Transactional
     public void updateBookEntity(Book book) {
         bookRepository.save(book);
-
-        BookInventoryEvent event = new BookInventoryEvent(
-                book.getId(),
-                book.getTitle(),
-                book.getAuthor(),
-                book.getPrice(),
-                book.getQuantity(),
-                "UPDATE"
-        );
-        kafkaTemplate.send("book-inventory-topic", String.valueOf(book.getId()), event);
     }
 
     @Override
@@ -157,12 +124,7 @@ public class BookServiceImpl implements BookService {
     public void deleteBook(Long id) {
         Book book = getBookEntityById(id);
         bookRepository.delete(book);
-        BookInventoryEvent event = new BookInventoryEvent();
-        event.setId(id);
-        event.setActionType("DELETE");
-        kafkaTemplate.send("book-inventory-topic", String.valueOf(id), event);
     }
-
 
     @Override
     public BookStatisticsDto getBookStatistics() {

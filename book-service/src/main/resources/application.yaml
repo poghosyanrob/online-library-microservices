@@ -15,9 +15,6 @@ spring:
     enabled: true
   kafka:
     bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
-    producer:
-      key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
     consumer:
       group-id: book-group
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
@@ -33,14 +30,15 @@ spring:
       database: 0
   cache:
     type: redis
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 5MB
 server:
   port: 8081
 app:
   upload:
     dir: ${UPLOAD_DIR:uploads/books}
-spring.servlet.multipart:
-  max-file-size: 5MB
-  max-request-size: 5MB
 gateway:
   secret: ${GATEWAY_SECRET}
 

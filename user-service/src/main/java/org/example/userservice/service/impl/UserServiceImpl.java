@@ -15,7 +15,6 @@ import org.example.userservice.model.dto.RegisterRequest;
 import org.example.userservice.model.dto.UserDto;
 import org.example.userservice.exception.AccountBlockedException;
 import org.example.userservice.repository.UserRepository;
-import org.example.userservice.service.UserEventProducer;
 import org.example.userservice.service.UserService;
 import org.example.userservice.util.JwtTokenUtil;
 import org.springframework.beans.factory.annotation.Value;
@@ -41,7 +40,6 @@ public class UserServiceImpl implements UserService {
     private final UserMapper userMapper;
     private final AuthenticationManager authenticationManager;
     private final JwtTokenUtil jwtTokenUtil;
-    private final UserEventProducer userEventProducer;
     private final StringRedisTemplate stringRedisTemplate;
     private final BookClient bookClient;
     private final OrderClient orderClient;
@@ -68,11 +66,6 @@ public class UserServiceImpl implements UserService {
         user.setRole(Role.USER);
         User savedUser = userRepository.save(user);
 
-        userEventProducer.sendUserCreatedEvent(
-                savedUser.getEmail(),
-                savedUser.getUsername(),
-                savedUser.getRole().name()
-        );
         return userMapper.toDto(savedUser);
     }
 
@@ -93,12 +86,6 @@ public class UserServiceImpl implements UserService {
         user.setActive(true);
 
         User savedUser = userRepository.save(user);
-
-        userEventProducer.sendUserCreatedEvent(
-                savedUser.getEmail(),
-                savedUser.getUsername(),
-                savedUser.getRole().name()
-        );
 
         return userMapper.toDto(savedUser);
     }
@@ -163,9 +150,11 @@ public class UserServiceImpl implements UserService {
     @Override
     public AdminDashboardDto getAdminDashboardStatistics() {
         CompletableFuture<BookStatisticsResponse> bookFuture =
-                CompletableFuture.supplyAsync(bookClient::getBookStatistics);
+                CompletableFuture.supplyAsync(bookClient::getBookStatistics)
+                        .exceptionally(e -> new BookStatisticsResponse(0L, 0L));
         CompletableFuture<OrderStatisticsResponse> orderFuture =
-                CompletableFuture.supplyAsync(orderClient::getOrderStatistics);
+                CompletableFuture.supplyAsync(orderClient::getOrderStatistics)
+                        .exceptionally(e -> new OrderStatisticsResponse(0L, 0.0));
         BookStatisticsResponse bookStats = bookFuture.join();
         OrderStatisticsResponse orderStats = orderFuture.join();
         return new AdminDashboardDto(
